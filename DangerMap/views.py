@@ -12,9 +12,13 @@ DANGER_TYPES = [
 ]
 
 def index(request):
+    context = {}
+
     position = []
     dangerLocations = []
     evacuationSites = []
+    goal = []
+    wayPoints = []
 
     # begin debug
     dangerLocations = [
@@ -34,6 +38,38 @@ def index(request):
         position.append(
             float(request.GET.get('longitude'))
         )
+
+        if 'goal_latitude' in request.GET and 'goal_longitude' in request.GET:
+            goal = [
+                float(request.GET.get('goal_latitude')),
+                float(request.GET.get('goal_longitude'))
+            ]
+
+            """
+            ここでwayPointsを算出
+            """
+            # begin debug
+            if (float(request.GET.get('goal_latitude')) == 35.679813655983 and float(request.GET.get('goal_longitude')) == 139.7769934504):
+                wayPoints = [
+                    [35.679478, 139.771698],
+                    [35.678227, 139.774466],
+                    [35.678771, 139.774856],
+                    [35.679612, 139.775354],
+                    [35.679349, 139.776051],
+                    [35.680649, 139.776878],
+                    [35.680459, 139.777466],
+                    [35.67990729379566, 139.77709236026595]
+                ]
+            elif (float(request.GET.get('goal_latitude')) == 35.676572613649 and float(request.GET.get('goal_longitude')) == 139.77132890862):
+                wayPoints = [
+                    [35.679478, 139.771698],
+                    [35.678510122094934, 139.77118555763727],
+                    [35.677798, 139.770605],
+                    [35.677109, 139.770467],
+                    [35.676679, 139.771367],
+                    [35.67656780468001, 139.77134018680187]
+                ]
+            # end debug
 
         ## 近くな危険な場所を設定する
         nearbyDangerLocations = DangerLocations.objects.filter(
@@ -60,11 +96,12 @@ def index(request):
                 evacuationSite.longitude
             ])
 
-
     context = {
         'position':     json.dumps(position),
         'danger':       json.dumps(dangerLocations),
-        'evacuation':   json.dumps(evacuationSites)
+        'evacuation':   json.dumps(evacuationSites),
+        'goal':         json.dumps(goal),
+        'wayPoints':    json.dumps(wayPoints)
     }
 
     return render(request, 'index.html', context)
