@@ -1,0 +1,100 @@
+{% load static %}
+<html>
+    <head>
+        <title>Danger Map</title>
+
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <script src="http://maps.google.com/maps/api/js?key=APIKEY&language=ja"></script>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <script>
+            let possition = {{position|safe}};
+            let dangerLocations = {{danger|safe}};
+            let evacuationSites = {{evacuation|safe}};
+
+            if (possition.length != 0) {
+                // マップを表示する
+                showMap(
+                    possition,
+                    dangerLocations,
+                    evacuationSites
+                );
+            } else {
+                let latitude = 35.68134;
+                let longitude = 139.76709;
+
+                // 現在地を取得する
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        latitude = position.latitude;
+                        longitude = position.longitude;
+                    }
+                );
+
+                document.location += `?latitude=${latitude}&longitude=${longitude}`;
+            }
+
+            // 現在地，危険な場所，避難場所からマップを生成する
+            function showMap(   position,
+                                dangerLocations,
+                                evacuationSites ) {
+                // ユーザの現在地
+                let userPosition = new google.maps.LatLng(
+                    position[0],
+                    position[1]
+                );
+
+                // 地図表示のためのオプション
+                let options = {
+                    zoom:       15,             // 地図の縮尺値
+                    center:     userPosition,   // 地図の中心座標(ユーザの現在地に設定)
+                    mapTypeId:  'roadmap'       // 地図の種類
+                };
+
+                // マップの生成
+                let map = new google.maps.Map(
+                    document.getElementById('map'),
+                    options
+                )
+
+                // 危険な場所にピンを刺す
+                dangerLocations.forEach(
+                    element => {
+                        pointDangerLocation(map, element[0], element[1], element[2])
+                    }
+                );
+
+                // 避難場所にピンを刺す
+                evacuationSites.forEach(
+                    element => {
+                        pointEvacuationSite(map, element[0], element[1])
+                    }
+                );
+            }
+
+            // 危険な場所にピンを刺す
+            function pointDangerLocation(map, latitude, longitude, type) {
+                let marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(latitude, longitude),
+                    map: map,
+                    icon: {
+                        url: "{% static 'image/dangerLocationIcon.png' %}"
+                    }
+                });
+            }
+
+            // 避難場所にピンを刺す
+            function pointEvacuationSite(map, latitude, longitude) {
+                let marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(latitude, longitude),
+                    map: map,
+                    icon: {
+                        url: "{% static 'image/evacuationSiteIcon.png' %}"
+                    }
+                });
+            }
+        </script>
+    </body>
+</html>
