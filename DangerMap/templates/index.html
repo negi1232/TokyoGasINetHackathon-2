@@ -13,13 +13,17 @@
             let possition = {{position|safe}};
             let dangerLocations = {{danger|safe}};
             let evacuationSites = {{evacuation|safe}};
+            let goal = {{goal|safe}};
+            let wayPoints = {{wayPoints|safe}};
 
             if (possition.length != 0) {
                 // マップを表示する
                 showMap(
                     possition,
                     dangerLocations,
-                    evacuationSites
+                    evacuationSites,
+                    goal,
+                    wayPoints
                 );
             } else {
                 let latitude = 35.68134;
@@ -39,7 +43,9 @@
             // 現在地，危険な場所，避難場所からマップを生成する
             function showMap(   position,
                                 dangerLocations,
-                                evacuationSites ) {
+                                evacuationSites,
+                                goal,
+                                wayPoints ) {
                 // ユーザの現在地
                 let userPosition = new google.maps.LatLng(
                     position[0],
@@ -72,6 +78,39 @@
                         pointEvacuationSite(map, element[0], element[1])
                     }
                 );
+
+
+                if (goal.length) {
+                    // 経路の検索
+                    // wayPointsをLatLngにする
+                    let waypoints = []
+
+                    wayPoints.forEach(
+                        (value) => {
+                            waypoints.push({location: new google.maps.LatLng(value[0], value[1])})
+                        }
+                    );
+
+                    let request = {
+                        origin: userPosition,
+                        destination: new google.maps.LatLng(
+                            goal[0],
+                            goal[1]
+                        ),
+                        waypoints: waypoints,
+                        travelMode: google.maps.DirectionsTravelMode.WALKING
+                    };
+
+                    let directionService = new google.maps.DirectionsService();
+                    let renderer = new google.maps.DirectionsRenderer({
+                        map: map,
+                        preserveViewPort: true
+                    });
+
+                    directionService.route(request, (result, status) => {
+                        renderer.setDirections(result);
+                    });
+                }
             }
 
             // 危険な場所にピンを刺す
@@ -84,7 +123,7 @@
                     map: map,
 
                     icon: {
-                        url: "{% static 'image/28674.png' %}"
+                        url: "{% static 'image/gus.png' %}"
                     } 
                 });
                 }
@@ -95,7 +134,18 @@
                     map: map,
 
                     icon: {
-                        url: "{% static 'image/28674.png' %}"
+                        url: "{% static 'image/collapse.png' %}"
+                    } 
+                });
+                }
+
+                if(type=='fire'){
+                let marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(latitude, longitude),
+                    map: map,
+
+                    icon: {
+                        url: "{% static 'image/fire.png' %}"
                     } 
                 });
                 }
@@ -114,6 +164,17 @@
                         url: "{% static 'image/evacuationSiteIcon.png' %}"
                     }
                 });
+                google.maps.event.addListener(
+                    marker,
+                    'click',
+                    (event) => {
+                        if (location.search.split('&').length == 4) {
+                            location.search = location.search.split('&').slice(0, 2).join('&') + `&goal_latitude=${latitude}&goal_longitude=${longitude}`
+                        } else {
+                            location.search += `&goal_latitude=${latitude}&goal_longitude=${longitude}`
+                        }
+                    }
+                );
             }
         </script>
     </body>
