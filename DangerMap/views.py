@@ -12,9 +12,13 @@ DANGER_TYPES = [
 ]
 
 def index(request):
+    context = {}
+
     position = []
     dangerLocations = []
     evacuationSites = []
+    goal = []
+    wayPoints = []
 
     # begin debug
     dangerLocations = [
@@ -34,6 +38,20 @@ def index(request):
         position.append(
             float(request.GET.get('longitude'))
         )
+
+        if 'goal_latitude' in request.GET and 'goal_longitude' in request.GET:
+            goal = [
+                float(request.GET.get('goal_latitude')),
+                float(request.GET.get('goal_longitude'))
+            ]
+
+            """
+            ここでwayPointsを算出
+            """
+
+            # begin debug
+            wayPoints = []
+            # end debug
 
         ## 近くな危険な場所を設定する
         nearbyDangerLocations = DangerLocations.objects.filter(
@@ -60,11 +78,12 @@ def index(request):
                 evacuationSite.longitude
             ])
 
-
     context = {
         'position':     json.dumps(position),
         'danger':       json.dumps(dangerLocations),
-        'evacuation':   json.dumps(evacuationSites)
+        'evacuation':   json.dumps(evacuationSites),
+        'goal':         json.dumps(goal),
+        'wayPoints':    json.dumps(wayPoints)
     }
 
     return render(request, 'index.html', context)
